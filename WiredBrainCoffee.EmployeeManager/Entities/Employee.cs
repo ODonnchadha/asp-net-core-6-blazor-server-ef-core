@@ -6,11 +6,11 @@ namespace WiredBrainCoffee.EmployeeManager.Entities
     {
         public int Id { get; set; }
         
-        [Required(), StringLength(50)]
+        [Required(ErrorMessage = "First Name is Required."), StringLength(50)]
         public string? FirstName { get; set; }
 
-        [Required(), StringLength(50)]
-        public string? LastName { get; set; }
+		[Required(ErrorMessage = "Last Name is Required."), StringLength(50)]
+		public string? LastName { get; set; }
 
         public bool IsDeveloper { get; set; }
 

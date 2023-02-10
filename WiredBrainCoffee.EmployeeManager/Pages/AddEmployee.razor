@@ -1,0 +1,92 @@
+﻿@page "/employees/add"
+@inject IDbContextFactory<EmployeeManagerDbContext> factory;
+
+<PageTitle>Add Employee</PageTitle>
+
+<h1>Add Employee</h1>
+
+<EmployeeForm Employee="@employee" Departments="@departments" IsBusy="@isBusy" OnSubmit="@HandleOnSubmit" />
+
+@if (success is not null)
+{
+	<br />
+	<div class="alert alert-success">@success</div>
+}
+@if (error is not null)
+{
+	<br />
+	<div class="alert alert-danger">@error</div>
+}
+
+@code {
+	private Department[]? departments { get; set; }
+	private Employee? employee { get; set; }
+	private bool isBusy { get; set; }
+
+	private string? error { get; set; }
+	private string? success { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		using var context = factory.CreateDbContext();
+
+		departments = await context.Departments.OrderBy(d => d.Name).ToArrayAsync();
+
+		employee = new()
+			{
+				DepartmentId = departments?.FirstOrDefault()?.Id
+			};
+	}
+
+	private async Task HandleOnSubmit(bool isValid)
+	{
+		if (isValid)
+		{
+			await HandleOnValidSubmit();
+		}
+		else
+		{
+			HandleOnInvalidSubmit();
+		}
+	}
+
+	private void HandleOnInvalidSubmit()
+	{
+		error = null;
+		success = null;
+	}
+
+	private async Task HandleOnValidSubmit()
+	{
+		if (isBusy) return;
+
+		isBusy = true;
+		try
+		{
+			if (employee is not null)
+			{
+				using var context = factory.CreateDbContext();
+
+				context.Employees.Add(employee);
+				await context.SaveChangesAsync();
+
+				error = null;
+				success = $"Employee {employee.FirstName} {employee.LastName} was added successfully.";
+
+				employee = new()
+					{
+						DepartmentId = employee.DepartmentId
+					};
+			}
+		}
+		catch (Exception ex)
+		{
+			error = $"Error {ex.Message} has occured!";
+			success = null;
+		}
+		finally
+		{
+			isBusy = false;
+		}
+	}
+}

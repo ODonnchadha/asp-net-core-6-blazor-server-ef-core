@@ -40,3 +40,19 @@
 
 - ADDING A NEW DATA ITEM:
   - Building a form to add a new employee.
+    ```csharp
+      <EditForm Model="@Employee">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="mb-3">
+			    <label for="firstName" class="form-label">First Name</label>
+			    <InputText id="firstName" class="form-control" @bind-Value="Employee.FirstName" />
+			    <ValidationMessage For="()=> Employee.FirstName" />
+		    </div>
+    ```
+  - [Ctrl] + k + c: to comment out line(s) of HTML code.
+
+- EXTRACTING THE FORM INTO A COMPONENT:
+
+- EDITING AN EXISTING DATA ITEM:
+  - Edit an existing employee via a component with an associated Id.

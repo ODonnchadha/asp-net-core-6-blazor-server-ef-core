@@ -1,0 +1,65 @@
+﻿@if (Employee is not null)
+{
+	<EditForm Model="@Employee" OnValidSubmit="@HandleOnValidSubmit" OnInvalidSubmit="@HandleOnInvalidSubmit">
+		<DataAnnotationsValidator />
+		<ValidationSummary />
+
+		<div class="mb-3">
+			<label for="firstName" class="form-label">First Name</label>
+			<InputText id="firstName" class="form-control" @bind-Value="Employee.FirstName" />
+			<ValidationMessage For="()=> Employee.FirstName" />
+		</div>
+		<div class="mb-3">
+			<label for="lastName" class="form-label">Last Name</label>
+			<InputText id="lastName" class="form-control" @bind-Value="Employee.LastName" />
+			<ValidationMessage For="()=> Employee.LastName" />
+		</div>
+		<div class="mb-3">
+			<label for="department" class="form-label">Department</label>
+			<InputSelect id="department" class="form-select" @bind-Value="Employee.DepartmentId">
+				@if (Departments is not null)
+				{
+					@foreach (var department in Departments)
+					{
+						<option value="@department.Id">@department.Name</option>
+					}
+				}
+			</InputSelect>
+		</div>
+		<div class="mb-3">
+			<label for="isDeveloper" class="form-label">Is Developer?</label>
+			<InputCheckbox id="isDeveloper" class="form-check-input" @bind-Value="Employee.IsDeveloper" />
+		</div>
+		<button type="submit" class="btn btn-primary" disabled="@IsBusy">Add</button>
+	</EditForm>
+}
+
+@code {
+	[Parameter()]
+	public Department[]? Departments { get; set; }
+
+	[Parameter()]
+	public Employee? Employee { get; set; }
+
+	[Parameter()]
+	public bool IsBusy { get; set; }
+
+	[Parameter()]
+	public EventCallback<bool> OnSubmit { get; set; }
+
+	private async Task HandleOnValidSubmit()
+	{
+		if (OnSubmit.HasDelegate)
+		{
+			await OnSubmit.InvokeAsync(true);
+		}
+	}
+
+	private async Task HandleOnInvalidSubmit()
+	{
+		if (OnSubmit.HasDelegate)
+		{
+			await OnSubmit.InvokeAsync(false);
+		}
+	}
+}
