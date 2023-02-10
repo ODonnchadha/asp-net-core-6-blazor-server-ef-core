@@ -1,0 +1,90 @@
+﻿@page "/employees/list/{currentPage:int?}"
+@inject IDbContextFactory<EmployeeManagerDbContext> factory;
+@inject NavigationManager navigation;
+
+<PageTitle>Employees</PageTitle>
+
+<h1>Employees</h1>
+
+@code {
+	[Parameter()]
+	public int? CurrentPage { get; set; }
+
+	private const int ITEMS_PER_PAGE = 4;
+	private Employee[]? employees { get; set; }
+	private int totalPages { get; set; }
+
+	protected override async Task OnParametersSetAsync()
+	{
+		if (CurrentPage is null or < 1) 
+		{
+			navigation.NavigateTo("/employees/list/1");
+			return;
+		}
+
+		var itemsToSkip = (CurrentPage.Value - 1) * ITEMS_PER_PAGE;
+
+		using var context = factory.CreateDbContext();
+
+		var employeeCount = await context.Employees.CountAsync();
+		totalPages = employeeCount == 0 ?
+		1 : 
+		(int)Math.Ceiling((double)employeeCount / ITEMS_PER_PAGE);
+
+		if (CurrentPage > totalPages)
+		{
+			navigation.NavigateTo($"/employees/list/{totalPages}");
+			return;
+		}
+
+		employees = await context.Employees.Include(
+			employee => employee.Department)
+			.OrderBy(employee => employee.FirstName)
+			.Skip(itemsToSkip)
+			.Take(ITEMS_PER_PAGE)
+			.ToArrayAsync();
+	}
+}
+@if (employees is null)
+{
+	<div>Loading...</div>
+}
+else
+{
+	<ul class="pagination mt-3">
+		<li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+			<a class="page-link" href="/employees/list/@(CurrentPage-1)">Previous</a>
+		</li>
+		@for (int id = 1; id <= totalPages; id++)
+		{
+			<li class="page-item @(CurrentPage == id ? "active" : "")">
+				<a class="page-link" href="/employees/list/@id">@id</a>
+			</li>
+		}
+		<li class="page-item @(CurrentPage == totalPages ? "disabled" : "")">
+			<a class="page-link" href="/employees/list/@(CurrentPage+1)">Next</a>
+		</li>
+	</ul>
+
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>First Name</th>
+				<th>Last Name</th>
+				<th>Is Developer</th>
+				<th>Department</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var employee in employees)
+			{
+				<tr>
+					<td>@employee.FirstName</td>
+					<td>@employee.LastName</td>
+					<td>@employee.IsDeveloper</td>
+					<td>@employee.Department?.Name</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
