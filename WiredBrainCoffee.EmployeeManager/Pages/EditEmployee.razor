@@ -1,0 +1,91 @@
+﻿@page "/employees/edit/{id:int}"
+@inject IDbContextFactory<EmployeeManagerDbContext> factory;
+@inject NavigationManager navigation;
+@inject StateContainer container;
+
+<PageTitle>Edit Employee</PageTitle>
+
+<h1>Edit Employee</h1>
+
+@if (employee is null && !isBusy)
+{
+    <div class="alert alert-danger">Employee with @id does not exist.</div>
+}
+else
+{
+    <EmployeeForm
+        Employee="@employee"
+        Departments="@departments"
+        IsBusy="@isBusy"
+        IsEdit = "true"
+        OnSubmit="@HandleOnSubmit"
+        OnCancel="@NavigateTo" />
+}
+
+@if (error is not null)
+{
+    <br />
+    <div class="alert alert-danger">@error</div>
+}
+
+@code {
+    [Parameter()]
+    public int id { get; set; }
+
+    private Department[]? departments { get; set; }
+    private Employee? employee { get; set; }
+    private bool isBusy { get; set; }
+
+    private string? error { get; set; }
+    private string? success { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isBusy = true;
+
+        try
+        {
+            using var context = factory.CreateDbContext();
+            departments = await context.Departments.AsNoTracking()
+            .OrderBy(d => d.Name).ToArrayAsync();
+            employee = await context.Employees.AsNoTracking().FirstOrDefaultAsync(
+                e => e.Id == id);
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task HandleOnSubmit(bool isValid)
+    {
+        if (employee is null || isBusy || !isValid)
+        {
+            error = null;
+            return;
+        }
+
+        isBusy = true;
+
+        try
+        {
+            using var context = factory.CreateDbContext();
+
+            context.Update(employee);
+            await context.SaveChangesAsync();
+
+            NavigateTo();
+        }
+        catch (Exception ex)
+        {
+            error = $"Error {ex.Message} has occured!";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private void NavigateTo() => 
+        navigation.NavigateTo($"/employees/list/{container.EmployeeOverviewPage}");
+}

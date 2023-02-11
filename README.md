@@ -56,3 +56,11 @@
 
 - EDITING AN EXISTING DATA ITEM:
   - Edit an existing employee via a component with an associated Id.
+  - NOTE: OnSave() Department object takes precedence over department id.
+    ```csharp
+      using var context = factory.CreateDbContext();
+      departments = await context.Departments.AsNoTracking()
+        .OrderBy(d => d.Name).ToArrayAsync();
+      employee = await context.Employees.AsNoTracking().FirstOrDefaultAsync(
+        e => e.Id == id);
+    ```

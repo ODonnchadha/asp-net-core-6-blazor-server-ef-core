@@ -5,7 +5,10 @@
 
 <h1>Add Employee</h1>
 
-<EmployeeForm Employee="@employee" Departments="@departments" IsBusy="@isBusy" OnSubmit="@HandleOnSubmit" />
+<EmployeeForm 
+	Employee="@employee" 
+	Departments="@departments" 
+	IsBusy="@isBusy" OnSubmit="@HandleOnSubmit" />
 
 @if (success is not null)
 {
@@ -30,7 +33,8 @@
 	{
 		using var context = factory.CreateDbContext();
 
-		departments = await context.Departments.OrderBy(d => d.Name).ToArrayAsync();
+		departments = await context.Departments.OrderBy(
+			d => d.Name).ToArrayAsync();
 
 		employee = new()
 			{

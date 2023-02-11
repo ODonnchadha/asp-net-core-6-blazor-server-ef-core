@@ -30,7 +30,16 @@
 			<label for="isDeveloper" class="form-label">Is Developer?</label>
 			<InputCheckbox id="isDeveloper" class="form-check-input" @bind-Value="Employee.IsDeveloper" />
 		</div>
-		<button type="submit" class="btn btn-primary" disabled="@IsBusy">Add</button>
+
+		@if (IsEdit)
+		{
+			<button type="submit" class="btn btn-primary" disabled="@IsBusy">Update</button>
+			<button type="submit" class="btn btn-secondary" onclick="HandleCancel" disabled="@IsBusy">Cancel</button>
+		}
+		else
+		{
+			<button type="submit" class="btn btn-primary" disabled="@IsBusy">Add</button>
+		}
 	</EditForm>
 }
 
@@ -45,7 +54,21 @@
 	public bool IsBusy { get; set; }
 
 	[Parameter()]
+	public bool IsEdit { get; set; }
+
+	[Parameter()]
 	public EventCallback<bool> OnSubmit { get; set; }
+
+	[Parameter()]
+	public EventCallback OnCancel { get; set; }
+
+	private async Task HandleCancel()
+	{
+		if (OnCancel.HasDelegate)
+		{
+			await OnCancel.InvokeAsync();
+		}
+	}
 
 	private async Task HandleOnValidSubmit()
 	{
