@@ -64,3 +64,19 @@
       employee = await context.Employees.AsNoTracking().FirstOrDefaultAsync(
         e => e.Id == id);
     ```
+
+- HANDLING CONCURRENCY CONFLICTS:
+  - Multiple users deleting or modifying the very same employee.
+    - Deleting: Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException
+    - Updating: Adding [Timestamp] to the entity class. Allows for "latest version." "Last wins!"
+      ```csharp
+        public class Employee
+        {
+            [Timestamp()]
+            public byte[]? Timestamp { get; set; }
+        }
+
+        add-migration timestamp
+        update-database
+      ```
+      - We now receive Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException.

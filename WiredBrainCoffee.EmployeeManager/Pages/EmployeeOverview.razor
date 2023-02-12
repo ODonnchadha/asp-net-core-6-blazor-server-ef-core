@@ -2,6 +2,7 @@
 @inject IDbContextFactory<EmployeeManagerDbContext> factory;
 @inject NavigationManager navigation;
 @inject StateContainer container;
+@inject IJSRuntime js;
 
 <PageTitle>Employees</PageTitle>
 
@@ -15,7 +16,9 @@
 	private Employee[]? employees { get; set; }
 	private int totalPages { get; set; }
 
-	protected override async Task OnParametersSetAsync()
+	protected override async Task OnParametersSetAsync() => await Load();
+
+	private async Task Load()
 	{
 		if (CurrentPage is null or < 1) 
 		{
@@ -47,7 +50,28 @@
 			.Take(ITEMS_PER_PAGE)
 			.ToArrayAsync();
 	}
+
+	private async Task OnDelete(Employee employee)
+	{
+		var ok = await js.InvokeAsync<bool>(
+			"confirm", $"Delete Employee {employee.FirstName} {employee.LastName}?");
+
+		if (ok)
+		{
+			try
+			{
+				using var context = factory.CreateDbContext();
+
+				context.Employees.Remove(employee);
+				await context.SaveChangesAsync();
+			}
+			catch (DbUpdateConcurrencyException) { }
+
+			await Load();
+		}
+	}
 }
+
 @if (employees is null)
 {
 	<div>Loading...</div>
@@ -87,10 +111,12 @@ else
 					<td>@employee.LastName</td>
 					<td>@employee.IsDeveloper</td>
 					<td>@employee.Department?.Name</td>
-					<td>
+					<td class="btn-group-sm">
 						<a href="/employees/edit/@employee.Id" class="btn btn-outline-primary">
 							Edit
 						</a>
+						<button class="btn btn-outline-danger" 
+						@onclick="()=> OnDelete(employee)">Delete</button>
 					</td>
 				</tr>
 			}

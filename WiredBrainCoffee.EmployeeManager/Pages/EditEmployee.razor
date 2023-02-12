@@ -76,6 +76,10 @@ else
 
             NavigateTo();
         }
+        catch (DbUpdateConcurrencyException)
+        {
+            error = $"Employee was recently modified. Please reload for valid results.";
+        }
         catch (Exception ex)
         {
             error = $"Error {ex.Message} has occured!";
